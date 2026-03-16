@@ -3,4 +3,4 @@ kubeconfig
 *.swo
 .DS_Store
 kind-logs-*
-.claude/
+.claude/worktrees/
