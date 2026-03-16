@@ -1,0 +1,22 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+timeout: 90
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hpa-target
+status:
+  readyReplicas: 1
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-target
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: hpa-target
+  minReplicas: 1
+  maxReplicas: 5

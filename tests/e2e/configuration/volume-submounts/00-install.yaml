@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: multi-key-config
+data:
+  app.conf: "app-config-content"
+  db.conf: "db-config-content"
+  logging.conf: "logging-config-content"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: subpath-pod
+spec:
+  containers:
+    - name: busybox
+      image: busybox:1.37
+      command: ["sh", "-c", "sleep 3600"]
+      volumeMounts:
+        - name: config
+          mountPath: /etc/app/app.conf
+          subPath: app.conf
+        - name: config
+          mountPath: /etc/app/db.conf
+          subPath: db.conf
+        - name: config
+          mountPath: /etc/app/logging.conf
+          subPath: logging.conf
+  volumes:
+    - name: config
+      configMap:
+        name: multi-key-config

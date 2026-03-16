@@ -1,0 +1,7 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestSuite
+testDirs:
+  - ./tests/e2e/scheduling
+startKIND: false
+timeout: 90
+parallel: 4

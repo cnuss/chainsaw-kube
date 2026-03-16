@@ -1,0 +1,28 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+timeout: 60
+collectors:
+  - type: pod
+    pod: shared-volume-pod
+    tail: 20
+commands:
+  - script: |
+      set -e
+      reader_data=$(kubectl exec shared-volume-pod -n $NAMESPACE -c reader -- cat /shared/data.txt)
+      if [ "$reader_data" != "shared-data-from-init" ]; then
+        echo "ERROR: reader container does not see init data"
+        exit 1
+      fi
+      sidecar_data=$(kubectl exec shared-volume-pod -n $NAMESPACE -c sidecar -- cat /shared/data.txt)
+      if [ "$sidecar_data" != "shared-data-from-init" ]; then
+        echo "ERROR: sidecar container does not see init data"
+        exit 1
+      fi
+      echo "Confirmed: both containers can read shared volume data from init container"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: shared-volume-pod
+status:
+  phase: Running

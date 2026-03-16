@@ -1,0 +1,90 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vol-config
+data:
+  config.txt: "configmap-content"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: vol-secret
+type: Opaque
+stringData:
+  secret.txt: "secret-content"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: volume-checker
+  labels:
+    app: volume-checker
+    test-label: volume-types
+  annotations:
+    test-annotation: volume-types-test
+spec:
+  containers:
+    - name: busybox
+      image: busybox:1.37
+      command: ["sh", "-c"]
+      args:
+        - |
+          set -e
+          echo "writing to emptyDir..."
+          echo "emptydir-content" > /data/empty/testfile
+          test -f /data/empty/testfile
+          echo "checking configMap..."
+          test "$(cat /data/config/config.txt)" = "configmap-content"
+          echo "checking secret..."
+          test "$(cat /data/secret/secret.txt)" = "secret-content"
+          echo "checking downwardAPI..."
+          grep -q 'app="volume-checker"' /data/downward/labels
+          grep -q 'test-annotation="volume-types-test"' /data/downward/annotations
+          echo "checking projected..."
+          test "$(cat /data/projected/config.txt)" = "configmap-content"
+          test "$(cat /data/projected/secret.txt)" = "secret-content"
+          grep -q 'app="volume-checker"' /data/projected/labels
+          echo "all volume checks passed"
+          sleep 3600
+      volumeMounts:
+        - name: empty
+          mountPath: /data/empty
+        - name: config
+          mountPath: /data/config
+        - name: secret
+          mountPath: /data/secret
+          readOnly: true
+        - name: downward
+          mountPath: /data/downward
+        - name: projected
+          mountPath: /data/projected
+  volumes:
+    - name: empty
+      emptyDir: {}
+    - name: config
+      configMap:
+        name: vol-config
+    - name: secret
+      secret:
+        secretName: vol-secret
+    - name: downward
+      downwardAPI:
+        items:
+          - path: labels
+            fieldRef:
+              fieldPath: metadata.labels
+          - path: annotations
+            fieldRef:
+              fieldPath: metadata.annotations
+    - name: projected
+      projected:
+        sources:
+          - configMap:
+              name: vol-config
+          - secret:
+              name: vol-secret
+          - downwardAPI:
+              items:
+                - path: labels
+                  fieldRef:
+                    fieldPath: metadata.labels

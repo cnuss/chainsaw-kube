@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: rbac-verifier
+spec:
+  serviceAccountName: pod-reader
+  restartPolicy: Never
+  containers:
+    - name: verifier
+      image: bitnami/kubectl:latest
+      command: ["sh", "-c"]
+      args:
+        - |
+          set -e
+          echo "Testing allowed: list pods..."
+          kubectl get pods --namespace=$POD_NAMESPACE
+          echo "Allowed action succeeded"
+          echo "Testing denied: list secrets..."
+          if kubectl get secrets --namespace=$POD_NAMESPACE 2>/dev/null; then
+            echo "ERROR: should not be able to list secrets"
+            exit 1
+          fi
+          echo "Denied action correctly rejected"
+      env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace

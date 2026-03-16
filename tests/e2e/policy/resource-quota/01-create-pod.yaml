@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: quota-test-pod
+spec:
+  restartPolicy: Never
+  containers:
+    - name: busybox
+      image: busybox:1.37
+      command: ["sh", "-c", "echo quota test; sleep 5"]
+      resources:
+        requests:
+          cpu: 100m
+          memory: 64Mi
+        limits:
+          cpu: 200m
+          memory: 128Mi

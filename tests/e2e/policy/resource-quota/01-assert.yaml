@@ -1,0 +1,8 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+timeout: 60
+commands:
+  - script: |
+      set -e
+      used_pods=$(kubectl get resourcequota test-quota -n $NAMESPACE -o jsonpath='{.status.used.pods}')
+      test "$used_pods" -ge 1

@@ -1,0 +1,7 @@
+apiVersion: conformance.kuttl.dev/v1
+kind: TestWidget
+metadata:
+  name: my-widget
+spec:
+  message: hello-from-widget
+  replicas: 3

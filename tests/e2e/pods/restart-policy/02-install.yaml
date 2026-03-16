@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: restart-always
+  labels:
+    app: restart-always
+spec:
+  restartPolicy: Always
+  containers:
+    - name: busybox
+      image: busybox:1.37
+      command: ["sh", "-c", "exit 0"]

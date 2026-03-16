@@ -1,0 +1,9 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+timeout: 30
+commands:
+  - script: |
+      set -e
+      # Confirm pod is still running and findable by combined selectors
+      name=$(kubectl get pods -n $NAMESPACE -l app=labeled-pod,version=v1,env=test -o jsonpath='{.items[0].metadata.name}')
+      test "$name" = "labeled-pod"

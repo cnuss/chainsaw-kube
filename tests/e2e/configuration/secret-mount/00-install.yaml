@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secret
+type: Opaque
+stringData:
+  username: admin
+  password: s3cret-p4ss
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secret-reader
+spec:
+  restartPolicy: Never
+  containers:
+    - name: reader
+      image: busybox:1.37
+      command: ["sh", "-c"]
+      args:
+        - |
+          set -e
+          echo "Checking env var..."
+          test "$SECRET_USER" = "admin"
+          echo "Checking mounted file..."
+          test "$(cat /secrets/password)" = "s3cret-p4ss"
+          echo "All checks passed"
+      env:
+        - name: SECRET_USER
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: username
+      volumeMounts:
+        - name: secret-volume
+          mountPath: /secrets
+          readOnly: true
+  volumes:
+    - name: secret-volume
+      secret:
+        secretName: app-secret

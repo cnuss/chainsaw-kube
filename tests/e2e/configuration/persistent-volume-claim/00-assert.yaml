@@ -1,0 +1,22 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+timeout: 120
+collectors:
+  - type: pod
+    pod: pvc-writer
+    tail: 20
+  - type: events
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: test-pvc
+status:
+  phase: Bound
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pvc-writer
+status:
+  phase: Succeeded

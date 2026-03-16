@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ns-lister-verifier
+spec:
+  serviceAccountName: ns-lister
+  restartPolicy: Never
+  containers:
+    - name: verifier
+      image: bitnami/kubectl:latest
+      command: ["sh", "-c"]
+      args:
+        - |
+          set -e
+          echo "Testing: list namespaces with ClusterRole..."
+          kubectl get namespaces
+          echo "Successfully listed namespaces"
+      env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace

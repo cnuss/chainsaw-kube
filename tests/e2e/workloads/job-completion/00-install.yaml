@@ -1,0 +1,22 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: counter
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: counter
+          image: busybox:1.37
+          command: ["sh", "-c"]
+          args:
+            - |
+              echo "Starting count..."
+              i=1
+              while [ $i -le 5 ]; do
+                echo "Count: $i"
+                i=$((i + 1))
+              done
+              echo "Job completed successfully"

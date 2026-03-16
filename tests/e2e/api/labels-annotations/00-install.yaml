@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: labeled-pod
+  labels:
+    app: labeled-pod
+    env: test
+    tier: frontend
+  annotations:
+    description: "a test pod for label and annotation verification"
+    owner: "kuttl-conformance"
+spec:
+  containers:
+    - name: nginx
+      image: nginx:1.27
+      ports:
+        - containerPort: 80

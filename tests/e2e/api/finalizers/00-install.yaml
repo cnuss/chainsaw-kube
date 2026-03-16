@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: finalized-config
+  finalizers:
+    - kuttl.dev/test-finalizer
+data:
+  key: value

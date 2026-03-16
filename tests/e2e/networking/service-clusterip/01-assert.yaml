@@ -1,0 +1,8 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+timeout: 60
+commands:
+  - script: |
+      set -e
+      addr_count=$(kubectl get endpoints nginx-clusterip -n $NAMESPACE -o jsonpath='{.subsets[0].addresses[*].ip}' | wc -w)
+      test "$addr_count" -ge 2

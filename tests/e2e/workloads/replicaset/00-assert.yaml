@@ -1,0 +1,20 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+timeout: 60
+collectors:
+  - type: pod
+    selector: app=nginx-rs
+    tail: 20
+  - type: events
+commands:
+  - script: |
+      set -e
+      ready=$(kubectl get replicaset nginx-rs -n $NAMESPACE -o jsonpath='{.status.readyReplicas}')
+      test "$ready" -eq 3
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: nginx-rs
+status:
+  readyReplicas: 3

@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: resource-set
+  labels:
+    app: resource-set
+spec:
+  containers:
+    - name: busybox
+      image: busybox:1.37
+      command: ["sh", "-c", "sleep 3600"]
+      resources:
+        requests:
+          cpu: 50m
+          memory: 32Mi
+        limits:
+          cpu: 100m
+          memory: 64Mi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: resource-excessive
+  labels:
+    app: resource-excessive
+spec:
+  containers:
+    - name: busybox
+      image: busybox:1.37
+      command: ["sh", "-c", "sleep 3600"]
+      resources:
+        requests:
+          memory: 999Gi

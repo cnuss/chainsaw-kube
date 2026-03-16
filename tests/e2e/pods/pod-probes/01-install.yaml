@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: readiness-file
+  labels:
+    app: readiness-file
+spec:
+  containers:
+    - name: busybox
+      image: busybox:1.37
+      command: ["sh", "-c"]
+      args:
+        - |
+          echo "Waiting before becoming ready..."
+          sleep 5
+          touch /tmp/ready
+          echo "Ready file created"
+          sleep 3600
+      readinessProbe:
+        exec:
+          command: ["test", "-f", "/tmp/ready"]
+        initialDelaySeconds: 2
+        periodSeconds: 3
+        failureThreshold: 5

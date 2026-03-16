@@ -2,3 +2,5 @@ kubeconfig
 *.swp
 *.swo
 .DS_Store
+kind-logs-*
+.claude/

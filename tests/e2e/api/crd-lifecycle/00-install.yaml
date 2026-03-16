@@ -1,0 +1,29 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: testwidgets.conformance.kuttl.dev
+spec:
+  group: conformance.kuttl.dev
+  names:
+    kind: TestWidget
+    listKind: TestWidgetList
+    plural: testwidgets
+    singular: testwidget
+    shortNames:
+      - tw
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                message:
+                  type: string
+                replicas:
+                  type: integer

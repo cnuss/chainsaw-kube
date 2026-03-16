@@ -1,0 +1,14 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+timeout: 120
+collectors:
+  - type: pod
+    selector: app=nginx-sts
+    tail: 20
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: web
+status:
+  readyReplicas: 3

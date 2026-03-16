@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hostpath-checker
+  labels:
+    app: hostpath-checker
+spec:
+  containers:
+    - name: busybox
+      image: busybox:1.37
+      command: ["sh", "-c"]
+      args:
+        - |
+          set -e
+          echo "writing to hostPath mount..."
+          echo "hostpath-content" > /host-data/testfile
+          echo "hostPath write succeeded"
+          sleep 3600
+      volumeMounts:
+        - name: hostpath-vol
+          mountPath: /host-data
+  volumes:
+    - name: hostpath-vol
+      hostPath:
+        path: /tmp/kuttl-hostpath-test
+        type: DirectoryOrCreate

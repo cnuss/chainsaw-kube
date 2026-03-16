@@ -1,0 +1,15 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestSuite
+testDirs:
+  - ./tests/e2e/pods
+  - ./tests/e2e/workloads
+  - ./tests/e2e/networking
+  - ./tests/e2e/configuration
+  - ./tests/e2e/scheduling
+  - ./tests/e2e/auth
+  - ./tests/e2e/policy
+  - ./tests/e2e/api
+  - ./tests/e2e/observability
+startKIND: false
+timeout: 60
+parallel: 4

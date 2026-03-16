@@ -1,0 +1,14 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+timeout: 30
+commands:
+  - script: |
+      set -e
+      # Verify the finalizer is present
+      finalizers=$(kubectl get configmap finalized-config -n $NAMESPACE -o jsonpath='{.metadata.finalizers[0]}')
+      test "$finalizers" = "kuttl.dev/test-finalizer"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: finalized-config

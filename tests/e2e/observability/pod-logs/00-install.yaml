@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: log-emitter
+  labels:
+    app: log-emitter
+spec:
+  restartPolicy: Never
+  containers:
+    - name: emitter
+      image: busybox:1.37
+      command: ["sh", "-c"]
+      args:
+        - |
+          echo "KUTTL_LOG_LINE_1: conformance test output"
+          echo "KUTTL_LOG_LINE_2: second line of output"
+          echo "KUTTL_LOG_LINE_3: final verification string"

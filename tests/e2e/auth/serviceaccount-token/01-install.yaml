@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa-no-token
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-no-token
+spec:
+  serviceAccountName: sa-no-token
+  automountServiceAccountToken: false
+  containers:
+    - name: busybox
+      image: busybox:1.37
+      command: ["sh", "-c", "sleep 3600"]

@@ -1,0 +1,18 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+timeout: 30
+commands:
+  - script: |
+      set -e
+      msg=$(kubectl get testwidget my-widget -n $NAMESPACE -o jsonpath='{.spec.message}')
+      test "$msg" = "updated-widget-message"
+      reps=$(kubectl get testwidget my-widget -n $NAMESPACE -o jsonpath='{.spec.replicas}')
+      test "$reps" = "5"
+---
+apiVersion: conformance.kuttl.dev/v1
+kind: TestWidget
+metadata:
+  name: my-widget
+spec:
+  message: updated-widget-message
+  replicas: 5

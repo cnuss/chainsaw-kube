@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: shared-volume-pod
+spec:
+  initContainers:
+    - name: writer
+      image: busybox:1.37
+      command: ["sh", "-c", "echo shared-data-from-init > /shared/data.txt"]
+      volumeMounts:
+        - name: shared
+          mountPath: /shared
+  containers:
+    - name: reader
+      image: busybox:1.37
+      command: ["sh", "-c", "sleep 3600"]
+      volumeMounts:
+        - name: shared
+          mountPath: /shared
+    - name: sidecar
+      image: busybox:1.37
+      command: ["sh", "-c", "sleep 3600"]
+      volumeMounts:
+        - name: shared
+          mountPath: /shared
+  volumes:
+    - name: shared
+      emptyDir: {}
