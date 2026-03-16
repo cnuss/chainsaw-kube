@@ -6,7 +6,8 @@
       "Write(*)",
       "Edit(*)",
       "Glob(*)",
-      "Grep(*)"
+      "Grep(*)",
+      "Bash(kind delete:*)"
     ]
   }
 }
