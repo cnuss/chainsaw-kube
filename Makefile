@@ -1,14 +1,23 @@
-KUTTL_VERSION ?= 0.25.0
+KREW_ROOT ?= $(HOME)/.krew
+export PATH := $(KREW_ROOT)/bin:$(PATH)
 
-.PHONY: install-kuttl matrix test
+.PHONY: install-krew install-kuttl matrix test
 
-## install-kuttl: download kuttl CLI if not already present
-install-kuttl:
-	@command -v kubectl-kuttl >/dev/null 2>&1 || { \
-		curl -fsSL "https://github.com/kudobuilder/kuttl/releases/download/v$(KUTTL_VERSION)/kubectl-kuttl_$(KUTTL_VERSION)_linux_x86_64" \
-			-o /usr/local/bin/kubectl-kuttl && \
-		chmod +x /usr/local/bin/kubectl-kuttl; \
+## install-krew: install krew kubectl plugin manager if not already present
+install-krew:
+	@command -v kubectl-krew >/dev/null 2>&1 || { \
+		set -e; cd "$$(mktemp -d)" && \
+		OS="$$(uname | tr '[:upper:]' '[:lower:]')" && \
+		ARCH="$$(uname -m | sed -e 's/x86_64/amd64/' -e 's/\(arm\)\(64\)\?.*/\1\2/' -e 's/aarch64$$/arm64/')" && \
+		KREW="krew-$${OS}_$${ARCH}" && \
+		curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/$${KREW}.tar.gz" && \
+		tar zxf "$${KREW}.tar.gz" && \
+		./"$${KREW}" install krew; \
 	}
+
+## install-kuttl: install kuttl via krew
+install-kuttl: install-krew
+	@command -v kubectl-kuttl >/dev/null 2>&1 || kubectl krew install kuttl
 
 ## matrix: emit a JSON list of test-suite names found under tests/e2e/*
 matrix:
