@@ -9,10 +9,12 @@ spec:
     try:
     - apply:
         file: 00-install.yaml
+    - assert:
+        file: 00-assert.yaml
     - script:
         content: |
           set -e
           priority=$(kubectl get pod priority-pod -n $NAMESPACE -o jsonpath='{.spec.priority}')
           test "$priority" -eq 1000
-    - assert:
-        file: 00-assert.yaml
+    catch:
+    - events: {}

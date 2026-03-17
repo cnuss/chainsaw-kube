@@ -5,10 +5,7 @@ metadata:
   name: clusterrole-binding
 spec:
   steps:
-  - catch:
-    - events:
-        namespace: $NAMESPACE
-    name: step-00
+  - name: step-00
     try:
     - script:
         content: |
@@ -48,20 +45,19 @@ spec:
           kubectl get serviceaccount ns-lister -n $NAMESPACE
           kubectl get clusterrole ns-lister-role-$NAMESPACE
           kubectl get clusterrolebinding ns-lister-binding-$NAMESPACE
-  - catch:
-    - podLogs:
-        name: ns-lister-verifier
-        tail: 30
-    name: step-01
+    catch:
+    - events: {}
+  - name: step-01
     try:
     - apply:
         file: 01-verify-access.yaml
     - assert:
         file: 01-assert.yaml
-  - catch:
-    - events:
-        namespace: $NAMESPACE
-    name: step-02
+    catch:
+    - podLogs:
+        name: ns-lister-verifier
+        tail: 30
+  - name: step-02
     try:
     - script:
         content: |
@@ -80,3 +76,10 @@ spec:
             echo "ClusterRoleBinding still exists"
             exit 1
           fi
+    catch:
+    - events: {}
+    cleanup:
+    - script:
+        content: kubectl delete clusterrole ns-lister-role-$NAMESPACE --ignore-not-found
+    - script:
+        content: kubectl delete clusterrolebinding ns-lister-binding-$NAMESPACE --ignore-not-found

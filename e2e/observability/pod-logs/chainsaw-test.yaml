@@ -5,11 +5,7 @@ metadata:
   name: pod-logs
 spec:
   steps:
-  - catch:
-    - podLogs:
-        name: log-emitter
-        tail: 20
-    name: step-00
+  - name: step-00
     try:
     - apply:
         file: 00-install.yaml
@@ -22,3 +18,7 @@ spec:
           echo "$logs" | grep -q "CHAINSAW_LOG_LINE_1: conformance test output"
           echo "$logs" | grep -q "CHAINSAW_LOG_LINE_2: second line of output"
           echo "$logs" | grep -q "CHAINSAW_LOG_LINE_3: final verification string"
+    catch:
+    - podLogs:
+        name: log-emitter
+        tail: 20

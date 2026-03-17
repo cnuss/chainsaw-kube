@@ -11,13 +11,14 @@ spec:
         file: 00-install.yaml
     - assert:
         file: 00-assert.yaml
-  - catch:
-    - events:
-        namespace: $NAMESPACE
-    name: step-01
+    catch:
+    - events: {}
+  - name: step-01
     try:
     - script:
         content: |
           set -e
           addr_count=$(kubectl get endpoints nginx-headless -n $NAMESPACE -o jsonpath='{.subsets[0].addresses[*].ip}' | wc -w)
           test "$addr_count" -eq 2
+    catch:
+    - events: {}

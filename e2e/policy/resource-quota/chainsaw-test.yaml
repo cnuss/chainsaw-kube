@@ -11,10 +11,9 @@ spec:
         file: 00-install.yaml
     - assert:
         file: 00-assert.yaml
-  - catch:
-    - events:
-        namespace: $NAMESPACE
-    name: step-01
+    catch:
+    - events: {}
+  - name: step-01
     try:
     - apply:
         file: 01-create-pod.yaml
@@ -23,3 +22,5 @@ spec:
           set -e
           used_pods=$(kubectl get resourcequota test-quota -n $NAMESPACE -o jsonpath='{.status.used.pods}')
           test "$used_pods" -eq 1
+    catch:
+    - events: {}

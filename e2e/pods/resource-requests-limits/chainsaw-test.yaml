@@ -5,13 +5,13 @@ metadata:
   name: resource-requests-limits
 spec:
   steps:
-  - catch:
-    - podLogs:
-        name: resource-set
-        tail: 20
-    name: step-00
+  - name: step-00
     try:
     - apply:
         file: 00-install.yaml
     - assert:
         file: 00-assert.yaml
+    catch:
+    - podLogs:
+        name: resource-set
+        tail: 20

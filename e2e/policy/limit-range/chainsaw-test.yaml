@@ -11,11 +11,9 @@ spec:
         file: 00-install.yaml
     - assert:
         file: 00-assert.yaml
-  - catch:
-    - podLogs:
-        name: limit-test-pod
-        tail: 20
-    name: step-01
+    catch:
+    - events: {}
+  - name: step-01
     try:
     - apply:
         file: 01-create-pod.yaml
@@ -33,3 +31,7 @@ spec:
           test -n "$mem_limit"
           test -n "$cpu_request"
           test -n "$mem_request"
+    catch:
+    - podLogs:
+        name: limit-test-pod
+        tail: 20

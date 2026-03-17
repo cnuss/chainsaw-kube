@@ -9,18 +9,18 @@ spec:
     try:
     - apply:
         file: 00-install.yaml
-    - script:
+    - assert:
         timeout: 120s
-        content: |
-          set -e
-          for i in $(seq 1 60); do
-            desired=$(kubectl get daemonset node-logger -n $NAMESPACE -o jsonpath='{.status.desiredNumberScheduled}' 2>/dev/null || echo 0)
-            ready=$(kubectl get daemonset node-logger -n $NAMESPACE -o jsonpath='{.status.numberReady}' 2>/dev/null || echo 0)
-            if [ "$desired" -ge 1 ] && [ "$ready" -eq "$desired" ]; then
-              echo "desired=$desired ready=$ready"
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "FAIL: desired=$desired ready=$ready"
-          exit 1
+        resource:
+          apiVersion: apps/v1
+          kind: DaemonSet
+          metadata:
+            name: node-logger
+          status:
+            numberReady: 1
+    catch:
+    - describe:
+        apiVersion: apps/v1
+        kind: DaemonSet
+        name: node-logger
+    - events: {}

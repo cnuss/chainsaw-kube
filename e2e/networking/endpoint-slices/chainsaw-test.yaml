@@ -11,10 +11,9 @@ spec:
         file: 00-install.yaml
     - assert:
         file: 00-assert.yaml
-  - catch:
-    - events:
-        namespace: $NAMESPACE
-    name: step-01
+    catch:
+    - events: {}
+  - name: step-01
     try:
     - script:
         content: |
@@ -26,3 +25,5 @@ spec:
           set -e
           endpoint_count=$(kubectl get endpointslices -n $NAMESPACE -l kubernetes.io/service-name=nginx-svc -o jsonpath='{range .items[0].endpoints[*]}{.addresses[0]}{"\n"}{end}' | grep -c .)
           test "$endpoint_count" -eq 2
+    catch:
+    - events: {}

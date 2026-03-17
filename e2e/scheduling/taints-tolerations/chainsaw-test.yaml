@@ -31,7 +31,6 @@ spec:
           phase=$(kubectl get pod no-toleration -n $NAMESPACE -o jsonpath='{.status.phase}')
           echo "no-toleration phase: $phase"
           if [ "$phase" != "Pending" ]; then
-            kubectl taint nodes "$node" test-taint=true:NoSchedule- || true
             echo "FAIL: expected Pending, got $phase"
             exit 1
           fi
@@ -54,15 +53,9 @@ spec:
           YAML
 
           # Wait for tolerated pod to be Running
-          for i in $(seq 1 30); do
-            phase=$(kubectl get pod with-toleration -n $NAMESPACE -o jsonpath='{.status.phase}')
-            if [ "$phase" = "Running" ]; then
-              break
-            fi
-            sleep 2
-          done
+          kubectl wait --for=condition=Ready pod/with-toleration -n $NAMESPACE --timeout=60s
 
-          # Remove taint immediately
+          # Remove taint
           kubectl taint nodes "$node" test-taint=true:NoSchedule-
 
           # Final verification
@@ -76,3 +69,10 @@ spec:
           echo "Taint removed successfully"
     - assert:
         file: 00-assert.yaml
+    catch:
+    - events: {}
+    finally:
+    - script:
+        content: |
+          node=$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}')
+          kubectl taint nodes "$node" test-taint=true:NoSchedule- 2>/dev/null || true

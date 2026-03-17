@@ -5,13 +5,13 @@ metadata:
   name: job-completion
 spec:
   steps:
-  - catch:
-    - podLogs:
-        selector: job-name=counter
-        tail: 20
-    name: step-00
+  - name: step-00
     try:
     - apply:
         file: 00-install.yaml
     - assert:
         file: 00-assert.yaml
+    catch:
+    - podLogs:
+        selector: job-name=counter
+        tail: 20

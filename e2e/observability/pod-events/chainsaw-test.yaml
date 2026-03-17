@@ -5,12 +5,7 @@ metadata:
   name: pod-events
 spec:
   steps:
-  - catch:
-    - podLogs:
-        name: event-checker
-        tail: 20
-    - events: {}
-    name: step-00
+  - name: step-00
     try:
     - apply:
         file: 00-install.yaml
@@ -24,3 +19,8 @@ spec:
           echo "$events" | grep -q "Pull"
           echo "$events" | grep -q "Created"
           echo "$events" | grep -q "Started"
+    catch:
+    - podLogs:
+        name: event-checker
+        tail: 20
+    - events: {}

@@ -5,10 +5,7 @@ metadata:
   name: finalizers
 spec:
   steps:
-  - catch:
-    - events:
-        namespace: $NAMESPACE
-    name: step-00
+  - name: step-00
     try:
     - apply:
         file: 00-install.yaml
@@ -20,15 +17,12 @@ spec:
           test "$finalizers" = "chainsaw.dev/test-finalizer"
     - assert:
         file: 00-assert.yaml
-  - catch:
-    - events:
-        namespace: $NAMESPACE
-    name: step-01
+    catch:
+    - events: {}
+  - name: step-01
     try:
     - script:
-        content: |
-          set -e
-          kubectl delete configmap finalized-config -n $NAMESPACE --wait=false
+        content: kubectl delete configmap finalized-config -n $NAMESPACE --wait=false
     - script:
         content: |
           set -e
@@ -37,6 +31,8 @@ spec:
           # Verify it has a deletionTimestamp
           ts=$(kubectl get configmap finalized-config -n $NAMESPACE -o jsonpath='{.metadata.deletionTimestamp}')
           test -n "$ts"
+    catch:
+    - events: {}
   - name: step-02
     try:
     - script:
@@ -44,3 +40,6 @@ spec:
           set -e
           kubectl patch configmap finalized-config -n $NAMESPACE --type=merge -p '{"metadata":{"finalizers":[]}}'
           kubectl wait --for=delete configmap/finalized-config -n $NAMESPACE --timeout=30s
+    cleanup:
+    - script:
+        content: kubectl patch configmap finalized-config -n $NAMESPACE --type=merge -p '{"metadata":{"finalizers":[]}}' 2>/dev/null || true

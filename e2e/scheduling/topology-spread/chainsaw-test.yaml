@@ -9,6 +9,8 @@ spec:
     try:
     - apply:
         file: 00-install.yaml
+    - assert:
+        file: 00-assert.yaml
     - script:
         content: |
           set -e
@@ -17,5 +19,5 @@ spec:
           test "$constraint" = "kubernetes.io/hostname"
           max_skew=$(kubectl get pods -n $NAMESPACE -l app=spread-test -o jsonpath='{.items[0].spec.topologySpreadConstraints[0].maxSkew}')
           test "$max_skew" -eq 1
-    - assert:
-        file: 00-assert.yaml
+    catch:
+    - events: {}

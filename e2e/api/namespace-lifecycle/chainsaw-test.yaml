@@ -5,29 +5,21 @@ metadata:
   name: namespace-lifecycle
 spec:
   steps:
-  - catch:
-    - events:
-        namespace: $NAMESPACE
-    name: step-00
+  - name: step-00
     try:
     - script:
-        content: |
-          set -e
-          kubectl create namespace chainsaw-ns-test-${NAMESPACE##*-}
+        content: kubectl create namespace chainsaw-ns-test-${NAMESPACE##*-}
     - script:
         content: |
           set -e
           status=$(kubectl get namespace chainsaw-ns-test-${NAMESPACE##*-} -o jsonpath='{.status.phase}')
           test "$status" = "Active"
-  - catch:
-    - events:
-        namespace: $NAMESPACE
-    name: step-01
+    catch:
+    - events: {}
+  - name: step-01
     try:
     - script:
-        content: |
-          set -e
-          kubectl delete namespace chainsaw-ns-test-${NAMESPACE##*-} --wait=true --timeout=60s
+        content: kubectl delete namespace chainsaw-ns-test-${NAMESPACE##*-} --wait=true --timeout=60s
     - script:
         content: |
           set -e
@@ -36,3 +28,8 @@ spec:
             exit 1
           fi
           echo "Namespace deleted successfully"
+    catch:
+    - events: {}
+    cleanup:
+    - script:
+        content: kubectl delete namespace chainsaw-ns-test-${NAMESPACE##*-} --ignore-not-found --wait=false

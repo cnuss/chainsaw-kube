@@ -11,6 +11,8 @@ spec:
         file: 00-install.yaml
     - assert:
         file: 00-assert.yaml
+    catch:
+    - events: {}
   - name: step-01
     try:
     - delete:
@@ -18,7 +20,11 @@ spec:
           apiVersion: v1
           kind: Pod
           name: nginx
-    - script:
-        content: |
-          set -e
-          kubectl wait --for=delete pod/nginx -n $NAMESPACE --timeout=30s
+    - error:
+        resource:
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            name: nginx
+    catch:
+    - events: {}

@@ -11,20 +11,24 @@ spec:
         file: 00-install.yaml
     - assert:
         file: 00-assert.yaml
+    catch:
+    - events: {}
   - name: step-01
     try:
     - apply:
         file: 01-scale.yaml
     - assert:
         file: 01-assert.yaml
-  - catch:
-    - podLogs:
-        selector: app=nginx
-        tail: 20
+    catch:
     - events: {}
-    name: step-02
+  - name: step-02
     try:
     - apply:
         file: 02-rolling-update.yaml
     - assert:
         file: 02-assert.yaml
+    catch:
+    - podLogs:
+        selector: app=nginx
+        tail: 20
+    - events: {}

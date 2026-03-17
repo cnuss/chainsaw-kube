@@ -11,9 +11,13 @@ spec:
         file: 00-install.yaml
     - assert:
         file: 00-assert.yaml
+    catch:
+    - events: {}
   - name: step-02
     try:
     - apply:
         file: 02-install.yaml
     - assert:
         file: 02-assert.yaml
+    catch:
+    - events: {}

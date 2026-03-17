@@ -5,13 +5,13 @@ metadata:
   name: secret-mount
 spec:
   steps:
-  - catch:
-    - podLogs:
-        name: secret-reader
-        tail: 20
-    name: step-00
+  - name: step-00
     try:
     - apply:
         file: 00-install.yaml
     - assert:
         file: 00-assert.yaml
+    catch:
+    - podLogs:
+        name: secret-reader
+        tail: 20
