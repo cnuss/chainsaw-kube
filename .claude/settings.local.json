@@ -7,7 +7,8 @@
       "Edit(*)",
       "Glob(*)",
       "Grep(*)",
-      "Bash(kind delete:*)"
+      "Bash(kind delete:*)",
+      "Bash(for f:*)"
     ]
   }
 }

@@ -107,25 +107,25 @@ Declarative end-to-end tests for core Kubernetes functionality using [KUTTL](htt
 Run all tests with an ephemeral Kind cluster:
 
 ```bash
-kubectl kuttl test --config tests/kuttl-test.yaml --start-kind
+kubectl kuttl test --config kuttl-test.yaml --start-kind
 ```
 
 Run a single suite:
 
 ```bash
-kubectl kuttl test --config tests/e2e/pods/kuttl-test.yaml --start-kind
+kubectl kuttl test --config e2e/pods/kuttl-test.yaml --start-kind
 ```
 
 Run a single test:
 
 ```bash
-kubectl kuttl test --config tests/kuttl-test.yaml --start-kind --test pod-lifecycle
+kubectl kuttl test --config kuttl-test.yaml --start-kind --test pod-lifecycle
 ```
 
 Run against an existing cluster:
 
 ```bash
-kubectl kuttl test --config tests/kuttl-test.yaml
+kubectl kuttl test --config kuttl-test.yaml
 ```
 
 ## Design Principles
