@@ -17,6 +17,9 @@
     "ghcr.io/rio/features/k9s:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
+  "containerEnv": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
   "postCreateCommand": {
     "chainsaw": "make install-chainsaw",
     "claude-config": "rm -rf ~/.claude && git clone https://github.com/cnuss/.claude ~/.claude"
@@ -33,7 +36,8 @@
     },
     "vscode": {
       "extensions": [
-        "ms-kubernetes-tools.vscode-kubernetes-tools"
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "ms-vscode.makefile-tools"
       ]
     }
   }
