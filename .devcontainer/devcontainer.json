@@ -16,8 +16,20 @@
     "ghcr.io/devcontainers/features/copilot-cli:1": {},
     "ghcr.io/rio/features/k9s:1": {}
   },
-  "postCreateCommand": "make install-kuttl",
+  "postCreateCommand": {
+    "kuttl": "make install-kuttl",
+    "claude-config": "if [ ! -d ~/.claude ]; then gh repo clone cnuss/.claude ~/.claude; fi"
+  },
   "customizations": {
+    "codespaces": {
+      "repositories": {
+        "cnuss/.claude": {
+          "permissions": {
+            "contents": "read"
+          }
+        }
+      }
+    },
     "vscode": {
       "extensions": [
         "ms-kubernetes-tools.vscode-kubernetes-tools"
