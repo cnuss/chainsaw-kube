@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/kyverno/chainsaw/main/.schemas/json/test-chainsaw-v1alpha1.json
+apiVersion: chainsaw.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: daemonset
+spec:
+  steps:
+  - name: step-00
+    try:
+    - apply:
+        file: 00-install.yaml
+    - assert:
+        timeout: 120s
+        resource:
+          apiVersion: apps/v1
+          kind: DaemonSet
+          metadata:
+            name: node-logger
+          status:
+            numberReady: 1
+    catch:
+    - describe:
+        apiVersion: apps/v1
+        kind: DaemonSet
+        name: node-logger
+    - events: {}

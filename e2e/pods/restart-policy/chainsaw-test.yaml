@@ -1,0 +1,61 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/kyverno/chainsaw/main/.schemas/json/test-chainsaw-v1alpha1.json
+apiVersion: chainsaw.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: restart-policy
+spec:
+  steps:
+  - name: step-00
+    try:
+    - apply:
+        file: 00-install.yaml
+    - assert:
+        file: 00-assert.yaml
+    catch:
+    - podLogs:
+        name: restart-never
+        tail: 20
+  - name: step-01
+    try:
+    - apply:
+        file: 01-install.yaml
+    - script:
+        timeout: 60s
+        content: |
+          set -e
+          for i in $(seq 1 30); do
+            count=$(kubectl get pod restart-onfailure -n $NAMESPACE -o jsonpath='{.status.containerStatuses[0].restartCount}' 2>/dev/null || echo 0)
+            if [ "$count" -gt 0 ]; then
+              echo "restartCount=$count"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "FAIL: restartCount never exceeded 0"
+          exit 1
+    catch:
+    - podLogs:
+        name: restart-onfailure
+        tail: 20
+  - name: step-02
+    try:
+    - apply:
+        file: 02-install.yaml
+    - script:
+        timeout: 60s
+        content: |
+          set -e
+          for i in $(seq 1 30); do
+            count=$(kubectl get pod restart-always -n $NAMESPACE -o jsonpath='{.status.containerStatuses[0].restartCount}' 2>/dev/null || echo 0)
+            if [ "$count" -gt 0 ]; then
+              echo "restartCount=$count"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "FAIL: restartCount never exceeded 0"
+          exit 1
+    catch:
+    - podLogs:
+        name: restart-always
+        tail: 20
