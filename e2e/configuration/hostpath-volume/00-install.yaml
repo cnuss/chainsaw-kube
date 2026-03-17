@@ -12,9 +12,29 @@ spec:
       args:
         - |
           set -e
-          echo "writing to hostPath mount..."
+
+          # Verify mount point exists and is a directory
+          test -d /host-data || { echo "FAIL: /host-data is not a directory"; exit 1; }
+
+          # hostPath DirectoryOrCreate: verify we got a clean directory
+          # (can't guarantee emptiness since hostPath persists across pods,
+          # but verify it's a real mount)
+          mount | grep -q "/host-data" || echo "WARN: /host-data may not be a distinct mount"
+
+          # Verify writable
           echo "hostpath-content" > /host-data/testfile
-          echo "hostPath write succeeded"
+          test "$(cat /host-data/testfile)" = "hostpath-content"
+
+          # Verify overwrites work
+          echo "overwritten" > /host-data/testfile
+          test "$(cat /host-data/testfile)" = "overwritten"
+
+          # Verify subdirectory creation works
+          mkdir -p /host-data/subdir
+          echo "nested" > /host-data/subdir/nested.txt
+          test "$(cat /host-data/subdir/nested.txt)" = "nested"
+
+          echo "hostPath checks passed"
           sleep 3600
       volumeMounts:
         - name: hostpath-vol

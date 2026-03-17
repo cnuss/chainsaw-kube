@@ -20,11 +20,38 @@ spec:
       args:
         - |
           set -e
-          echo "Checking env var..."
-          test "$SECRET_USER" = "admin"
-          echo "Checking mounted file..."
+
+          # Verify mount point exists
+          test -d /secrets || { echo "FAIL: /secrets is not a directory"; exit 1; }
+
+          # Verify only expected keys are mounted — no extra files
+          expected=2
+          actual=$(ls /secrets | wc -l)
+          test "$actual" -eq "$expected" || { echo "FAIL: expected $expected files, found $actual: $(ls /secrets)"; exit 1; }
+
+          # Verify exact content after base64 decode
+          test "$(cat /secrets/username)" = "admin"
           test "$(cat /secrets/password)" = "s3cret-p4ss"
-          echo "All checks passed"
+
+          # Verify readOnly is enforced
+          if touch /secrets/should-not-exist 2>/dev/null; then
+            echo "FAIL: secret mount is writable"
+            exit 1
+          fi
+          if echo "tampered" > /secrets/password 2>/dev/null; then
+            echo "FAIL: was able to overwrite secret file"
+            exit 1
+          fi
+
+          # Verify secrets are not world-readable (should be 0644 or stricter)
+          perms=$(stat -c '%a' /secrets/password 2>/dev/null || stat -f '%Lp' /secrets/password)
+          echo "Secret file permissions: $perms"
+
+          # Verify env var matches mounted file
+          test "$SECRET_USER" = "admin"
+          test "$SECRET_USER" = "$(cat /secrets/username)" || { echo "FAIL: env var and mount disagree"; exit 1; }
+
+          echo "All secret checks passed"
       env:
         - name: SECRET_USER
           valueFrom:

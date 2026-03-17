@@ -21,12 +21,32 @@ spec:
       args:
         - |
           set -e
-          echo "Checking env var..."
+
+          # Verify mount point exists and is a directory
+          test -d /config || { echo "FAIL: /config is not a directory"; exit 1; }
+
+          # Verify no unexpected files in the mount
+          expected=2
+          actual=$(ls /config | wc -l)
+          test "$actual" -eq "$expected" || { echo "FAIL: expected $expected files, found $actual: $(ls /config)"; exit 1; }
+
+          # Verify exact content — not partial, not corrupted
+          test "$(cat /config/greeting)" = "hello-from-configmap"
+          grep -qx "key1=value1" /config/config.txt
+          grep -qx "key2=value2" /config/config.txt
+
+          # Verify configmap mount is read-only by default
+          if touch /config/should-not-exist 2>/dev/null; then
+            echo "FAIL: configmap mount is writable — should be read-only"
+            rm -f /config/should-not-exist
+            exit 1
+          fi
+
+          # Verify env var injection matches the mounted file
           test "$GREETING" = "hello-from-configmap"
-          echo "Checking mounted file..."
-          grep -q "key1=value1" /config/config.txt
-          grep -q "key2=value2" /config/config.txt
-          echo "All checks passed"
+          test "$GREETING" = "$(cat /config/greeting)" || { echo "FAIL: env var and mount disagree"; exit 1; }
+
+          echo "All configmap checks passed"
       env:
         - name: GREETING
           valueFrom:
