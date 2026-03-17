@@ -37,7 +37,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: kyverno/action-install-chainsaw@v0.2
+      - uses: kyverno/action-install-chainsaw@v0.2.14
 
       - uses: helm/kind-action@v1
 
