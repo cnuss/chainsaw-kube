@@ -43,5 +43,4 @@ spec:
         content: |
           set -e
           kubectl patch configmap finalized-config -n $NAMESPACE --type=merge -p '{"metadata":{"finalizers":[]}}'
-    - error:
-        file: 02-errors.yaml
+          kubectl wait --for=delete configmap/finalized-config -n $NAMESPACE --timeout=30s

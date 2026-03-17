@@ -18,5 +18,7 @@ spec:
           apiVersion: v1
           kind: Pod
           name: nginx
-    - error:
-        file: 01-errors.yaml
+    - script:
+        content: |
+          set -e
+          kubectl wait --for=delete pod/nginx -n $NAMESPACE --timeout=30s

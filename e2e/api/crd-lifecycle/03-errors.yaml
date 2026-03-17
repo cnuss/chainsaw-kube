@@ -1,4 +1,0 @@
-apiVersion: conformance.chainsaw.dev/v1
-kind: TestWidget
-metadata:
-  name: my-widget
