@@ -6,18 +6,20 @@ metadata:
 spec:
   description: Validates taints block scheduling for intolerant pods and tolerations allow scheduling
   steps:
+  - name: wait-for-sa
+    try:
+    - assert:
+        resource:
+          apiVersion: v1
+          kind: ServiceAccount
+          metadata:
+            name: default
   - name: verify-taint-and-toleration-behavior
     try:
     - script:
         content: |
           set -e
           node=$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}')
-
-          # Wait for default ServiceAccount to be provisioned
-          for i in $(seq 1 10); do
-            if kubectl get sa default -n $NAMESPACE >/dev/null 2>&1; then break; fi
-            sleep 1
-          done
 
           # Add taint
           kubectl taint nodes "$node" test-taint=true:NoSchedule

@@ -6,17 +6,19 @@ metadata:
 spec:
   description: Validates nodeSelector schedules pods to matching nodes and rejects non-matching selectors
   steps:
+  - name: wait-for-sa
+    try:
+    - assert:
+        resource:
+          apiVersion: v1
+          kind: ServiceAccount
+          metadata:
+            name: default
   - name: verify-matching-selector
     try:
     - script:
         content: |
           set -e
-
-          # Wait for default ServiceAccount to be provisioned
-          for i in $(seq 1 10); do
-            if kubectl get sa default -n $NAMESPACE >/dev/null 2>&1; then break; fi
-            sleep 1
-          done
 
           # Discover the actual node hostname label — works on any cluster
           hostname=$(kubectl get nodes -o jsonpath='{.items[0].metadata.labels.kubernetes\.io/hostname}')
