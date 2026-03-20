@@ -54,4 +54,4 @@ test: install-chainsaw
 	if [ -n "$(SUITE)" ]; then test_dir=e2e/$(SUITE); fi; \
 	what=""; \
 	if [ -n "$(WHAT)" ]; then what="--include-test-regex /$(WHAT)"; fi; \
-	chainsaw test --fail-fast --config .chainsaw.yaml --test-dir $$test_dir $$what
+	chainsaw test --config .chainsaw.yaml --test-dir $$test_dir $$what
