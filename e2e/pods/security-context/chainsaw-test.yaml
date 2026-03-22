@@ -6,6 +6,14 @@ metadata:
 spec:
   description: Validates pod and container security contexts including runAsUser, readOnlyRootFilesystem, and privilege drop
   steps:
+  - name: wait-for-sa
+    try:
+    - assert:
+        resource:
+          apiVersion: v1
+          kind: ServiceAccount
+          metadata:
+            name: default
   - name: verify-runas-user
     try:
     - apply:
