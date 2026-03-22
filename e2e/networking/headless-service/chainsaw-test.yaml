@@ -29,7 +29,7 @@ spec:
         content: |
           set -e
           kubectl run dns-test --rm -i --restart=Never --image=busybox:1.37 -n $NAMESPACE -- \
-            nslookup nginx-headless
+            sh -c 'nslookup nginx-headless 2>/dev/null | grep -q "Name:"'
     - script:
         content: |
           set -e
