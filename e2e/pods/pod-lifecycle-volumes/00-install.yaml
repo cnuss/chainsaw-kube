@@ -24,7 +24,7 @@ spec:
       lifecycle:
         postStart:
           exec:
-            command: ["sh", "-c", "date > /data/started.txt"]
+            command: ["sh", "-c", "date >> /data/started.txt"]
       volumeMounts:
         - name: data
           mountPath: /data

@@ -14,6 +14,18 @@ spec:
         file: 00-assert.yaml
     catch:
     - events: {}
+  - name: verify-volume-data
+    try:
+    - script:
+        content: |
+          set -e
+          lines=$(kubectl exec nginx -n $NAMESPACE -- cat /data/started.txt)
+          echo "--- /data/started.txt ---"
+          echo "$lines"
+          echo "---"
+          test "$(echo "$lines" | wc -l)" -ge 1
+    catch:
+    - events: {}
   - name: delete-and-verify-gone
     try:
     - delete:
