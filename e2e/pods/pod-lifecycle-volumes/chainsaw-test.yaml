@@ -19,11 +19,11 @@ spec:
     - script:
         content: |
           set -e
-          lines=$(kubectl exec nginx -n $NAMESPACE -- cat /pvc/started.txt)
+          pvc=$(kubectl exec nginx -n $NAMESPACE -- cat /pvc/started.txt)
           echo "--- /pvc/started.txt (persistent) ---"
-          echo "$lines"
+          echo "$pvc"
           echo "---"
-          test "$(echo "$lines" | wc -l)" -ge 1
+          test "$(echo "$pvc" | wc -l)" -ge 1
           scratch=$(kubectl exec nginx -n $NAMESPACE -- cat /scratch/started.txt)
           echo "--- /scratch/started.txt (emptyDir) ---"
           echo "$scratch"
