@@ -15,11 +15,20 @@ spec:
     - script:
         content: |
           set -e
-          events=$(kubectl get events -n $NAMESPACE --field-selector involvedObject.name=event-checker --no-headers)
-          echo "$events" | grep -q "Scheduled"
-          echo "$events" | grep -q "Pull"
-          echo "$events" | grep -q "Created"
-          echo "$events" | grep -q "Started"
+          for i in $(seq 1 15); do
+            events=$(kubectl get events -n $NAMESPACE --field-selector involvedObject.name=event-checker --no-headers)
+            if echo "$events" | grep -q "Scheduled" &&
+               echo "$events" | grep -q "Pull" &&
+               echo "$events" | grep -q "Created" &&
+               echo "$events" | grep -q "Started"; then
+              echo "$events"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Events after 15s:"
+          echo "$events"
+          exit 1
     catch:
     - podLogs:
         name: event-checker
