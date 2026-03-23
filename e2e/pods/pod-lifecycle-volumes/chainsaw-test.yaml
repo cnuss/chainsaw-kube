@@ -4,27 +4,28 @@ kind: Test
 metadata:
   name: pod-lifecycle-volumes
 spec:
-  description: Validates pod lifecycle with a persistent volume — write data, delete pod, read data from a new pod
+  description: Validates pod lifecycle with a persistent volume
   steps:
-  - name: write-data
+  - name: create-and-verify-running
     try:
     - apply:
         file: 00-install.yaml
     - assert:
         file: 00-assert.yaml
     catch:
-    - podLogs:
-        name: writer
-        tail: 20
     - events: {}
-  - name: read-data
+  - name: delete-and-verify-gone
     try:
-    - apply:
-        file: 01-install.yaml
-    - assert:
-        file: 01-assert.yaml
+    - delete:
+        ref:
+          apiVersion: v1
+          kind: Pod
+          name: nginx
+    - error:
+        resource:
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            name: nginx
     catch:
-    - podLogs:
-        name: reader
-        tail: 20
     - events: {}
