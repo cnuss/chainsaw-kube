@@ -23,14 +23,12 @@ spec:
     - script:
         content: |
           set -e
-          addr_count=$(kubectl get endpoints nginx-svc -n $NAMESPACE -o jsonpath='{.subsets[0].addresses[*].ip}' | wc -w)
-          echo "Endpoint address count: $addr_count"
+          addr_count=$(kubectl get endpointslices -l kubernetes.io/service-name=nginx-svc -n $NAMESPACE -o jsonpath='{.items[0].endpoints[*].addresses[0]}' | wc -w)
+          echo "EndpointSlice address count: $addr_count"
           test "$addr_count" -eq 1
     catch:
     - script:
         content: |
-          echo "=== Endpoints ==="
-          kubectl get endpoints nginx-svc -n $NAMESPACE -o yaml
           echo "=== EndpointSlices ==="
           kubectl get endpointslices -n $NAMESPACE -o yaml
           echo "=== Pods ==="
