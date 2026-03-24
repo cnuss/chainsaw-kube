@@ -19,7 +19,7 @@ spec:
     - script:
         content: |
           set -e
-          node=$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}')
+          node=$(kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{range .status.conditions[*]}{.type}={.status}{"\t"}{end}{"\n"}{end}' | grep 'Ready=True' | head -1 | cut -f1)
 
           # Add taint
           kubectl taint nodes "$node" test-taint=true:NoSchedule
@@ -89,5 +89,5 @@ spec:
     finally:
     - script:
         content: |
-          node=$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}')
+          node=$(kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{range .status.conditions[*]}{.type}={.status}{"\t"}{end}{"\n"}{end}' | grep 'Ready=True' | head -1 | cut -f1)
           kubectl taint nodes "$node" test-taint=true:NoSchedule- || true

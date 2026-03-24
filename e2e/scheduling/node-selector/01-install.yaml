@@ -5,6 +5,8 @@ metadata:
   labels:
     app: node-selector-nomatch
 spec:
+  tolerations:
+    - operator: Exists
   nodeSelector:
     non-existent-label: no-such-value
   containers:
