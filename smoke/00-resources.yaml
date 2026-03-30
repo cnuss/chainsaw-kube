@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: smoke-sa
+automountServiceAccountToken: true
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: smoke-role
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "configmaps"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: smoke-binding
+subjects:
+  - kind: ServiceAccount
+    name: smoke-sa
+roleRef:
+  kind: Role
+  name: smoke-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: smoke-config
+data:
+  app.conf: "smoke-config-value"
+  greeting: "hello-from-smoke"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: smoke-secret
+type: Opaque
+stringData:
+  password: "s3cret-smoke"
+  token: "fake-token-value"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: smoke-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 64Mi

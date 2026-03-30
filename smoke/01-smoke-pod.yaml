@@ -1,0 +1,231 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: smoke-pod
+  labels:
+    app: smoke-pod
+    test: smoke
+  annotations:
+    smoke-annotation: smoke-test-value
+spec:
+  restartPolicy: Never
+  serviceAccountName: smoke-sa
+
+  initContainers:
+    # Init 1: write setup data to shared emptyDir for main container
+    - name: init-setup
+      image: busybox:1.37
+      command: ["sh", "-c"]
+      args:
+        - |
+          set -e
+          echo "init-setup-payload" > /shared/init-message
+          echo "init-timestamp=$(date +%s)" > /shared/init-meta
+          mkdir -p /shared/subdir
+          echo "nested-init-data" > /shared/subdir/nested.txt
+      volumeMounts:
+        - name: shared
+          mountPath: /shared
+
+    # Init 2: verify DNS resolution works before main container starts
+    - name: init-dns
+      image: busybox:1.37
+      command: ["sh", "-c"]
+      args:
+        - |
+          set -e
+          # Verify cluster DNS resolves the kubernetes service
+          for i in $(seq 1 30); do
+            if nslookup kubernetes.default.svc.cluster.local > /tmp/dns-result 2>&1; then
+              echo "DNS resolution succeeded"
+              cat /tmp/dns-result
+              cp /tmp/dns-result /shared/dns-result
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "FAIL: DNS resolution failed after 30s"
+          cat /tmp/dns-result 2>/dev/null
+          exit 1
+      volumeMounts:
+        - name: shared
+          mountPath: /shared
+
+    # Init 3: verify PVC is writable by seeding data
+    - name: init-pvc
+      image: busybox:1.37
+      command: ["sh", "-c"]
+      args:
+        - |
+          set -e
+          echo "pvc-init-data" > /pvc/init-seed.txt
+          test -f /pvc/init-seed.txt
+          test "$(cat /pvc/init-seed.txt)" = "pvc-init-data"
+      volumeMounts:
+        - name: pvc
+          mountPath: /pvc
+
+  containers:
+    - name: smoke-test
+      image: busybox:1.37
+      command: ["sh", "-c"]
+      args:
+        - |
+          set -e
+
+          echo "=== emptyDir: verify init container data ==="
+          test "$(cat /shared/init-message)" = "init-setup-payload"
+          grep -q "init-timestamp=" /shared/init-meta
+          test "$(cat /shared/subdir/nested.txt)" = "nested-init-data"
+          # Verify DNS init container also wrote its result
+          test -f /shared/dns-result
+          grep -qi "kubernetes" /shared/dns-result
+          echo "emptyDir: PASS"
+
+          echo "=== hostPath: verify read/write ==="
+          test -d /host-data
+          echo "smoke-hostpath-data" > /host-data/smoke-test.txt
+          test "$(cat /host-data/smoke-test.txt)" = "smoke-hostpath-data"
+          echo "hostPath: PASS"
+
+          echo "=== configMap: verify content and read-only ==="
+          test "$(cat /config/app.conf)" = "smoke-config-value"
+          test "$(cat /config/greeting)" = "hello-from-smoke"
+          test "$(ls /config | wc -l)" -eq 2
+          ! touch /config/rogue 2>/dev/null
+          echo "configMap: PASS"
+
+          echo "=== secret: verify content and read-only ==="
+          test "$(cat /secret/password)" = "s3cret-smoke"
+          test "$(cat /secret/token)" = "fake-token-value"
+          test "$(ls /secret | wc -l)" -eq 2
+          ! echo "tampered" > /secret/password 2>/dev/null
+          echo "secret: PASS"
+
+          echo "=== downwardAPI: verify pod metadata ==="
+          grep -q 'app="smoke-pod"' /downward/labels
+          grep -q 'test="smoke"' /downward/labels
+          grep -q 'smoke-annotation="smoke-test-value"' /downward/annotations
+          echo "downwardAPI: PASS"
+
+          echo "=== projected: verify combined sources ==="
+          # SA token from projected volume
+          test -f /projected/sa-token
+          test -s /projected/sa-token
+          # ConfigMap key from projected volume
+          test "$(cat /projected/app.conf)" = "smoke-config-value"
+          # DownwardAPI from projected volume
+          grep -q 'app="smoke-pod"' /projected/labels
+          echo "projected: PASS"
+
+          echo "=== PVC: verify init data persists + read/write ==="
+          test "$(cat /pvc/init-seed.txt)" = "pvc-init-data"
+          echo "pvc-main-data" > /pvc/main-write.txt
+          test "$(cat /pvc/main-write.txt)" = "pvc-main-data"
+          echo "PVC: PASS"
+
+          echo "=== SA token: verify automount ==="
+          test -f /var/run/secrets/kubernetes.io/serviceaccount/token
+          test -s /var/run/secrets/kubernetes.io/serviceaccount/token
+          test -f /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          test -f /var/run/secrets/kubernetes.io/serviceaccount/namespace
+          echo "SA token automount: PASS"
+
+          echo "=== lifecycle: verify postStart hook ran ==="
+          for i in $(seq 1 10); do
+            test -f /shared/poststart-marker && break
+            sleep 1
+          done
+          test -f /shared/poststart-marker
+          test "$(cat /shared/poststart-marker)" = "poststart-executed"
+          echo "postStart hook: PASS"
+
+          echo "=== DNS: verify resolution from main container ==="
+          nslookup kubernetes.default.svc.cluster.local
+          echo "DNS from main: PASS"
+
+          echo "ALL SMOKE CHECKS PASSED"
+
+      lifecycle:
+        postStart:
+          exec:
+            command: ["sh", "-c", "echo poststart-executed > /shared/poststart-marker"]
+
+      env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: CONFIG_GREETING
+          valueFrom:
+            configMapKeyRef:
+              name: smoke-config
+              key: greeting
+        - name: SECRET_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: smoke-secret
+              key: password
+
+      volumeMounts:
+        - name: shared
+          mountPath: /shared
+        - name: hostpath
+          mountPath: /host-data
+        - name: config
+          mountPath: /config
+        - name: secret
+          mountPath: /secret
+          readOnly: true
+        - name: downward
+          mountPath: /downward
+        - name: projected
+          mountPath: /projected
+        - name: pvc
+          mountPath: /pvc
+
+  volumes:
+    - name: shared
+      emptyDir: {}
+    - name: hostpath
+      hostPath:
+        path: /tmp/chainsaw-smoke-test
+        type: DirectoryOrCreate
+    - name: config
+      configMap:
+        name: smoke-config
+    - name: secret
+      secret:
+        secretName: smoke-secret
+    - name: downward
+      downwardAPI:
+        items:
+          - path: labels
+            fieldRef:
+              fieldPath: metadata.labels
+          - path: annotations
+            fieldRef:
+              fieldPath: metadata.annotations
+    - name: projected
+      projected:
+        sources:
+          - serviceAccountToken:
+              path: sa-token
+              expirationSeconds: 3600
+          - configMap:
+              name: smoke-config
+              items:
+                - key: app.conf
+                  path: app.conf
+          - downwardAPI:
+              items:
+                - path: labels
+                  fieldRef:
+                    fieldPath: metadata.labels
+    - name: pvc
+      persistentVolumeClaim:
+        claimName: smoke-pvc

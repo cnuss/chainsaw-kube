@@ -1,0 +1,112 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/kyverno/chainsaw/main/.schemas/json/test-chainsaw-v1alpha1.json
+apiVersion: chainsaw.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: smoke
+spec:
+  description: >
+    Comprehensive smoke test exercising auth (SA + RBAC), all volume types
+    (emptyDir, hostPath, configMap, secret, projected, downwardAPI, PVC),
+    DNS resolution, init containers, and lifecycle hooks in a single test
+  timeouts:
+    apply: 30s
+    assert: 3m
+    cleanup: 2m
+  steps:
+  - name: create-resources
+    description: Create SA, Role, RoleBinding, ConfigMap, Secret, PVC
+    try:
+    - apply:
+        file: 00-resources.yaml
+    - assert:
+        file: 00-assert.yaml
+    catch:
+    - events: {}
+
+  - name: run-smoke-pod
+    description: >
+      Pod with 3 init containers (setup, DNS, PVC seed) and a main container
+      that verifies all volume types, lifecycle hooks, DNS, and SA token
+    try:
+    - apply:
+        file: 01-smoke-pod.yaml
+    - assert:
+        file: 01-assert.yaml
+    catch:
+    - podLogs:
+        name: smoke-pod
+        container: smoke-test
+        tail: 80
+    - podLogs:
+        name: smoke-pod
+        container: init-setup
+        tail: 20
+    - podLogs:
+        name: smoke-pod
+        container: init-dns
+        tail: 20
+    - podLogs:
+        name: smoke-pod
+        container: init-pvc
+        tail: 20
+    - describe:
+        apiVersion: v1
+        kind: Pod
+        name: smoke-pod
+    - events: {}
+
+  - name: verify-smoke-logs
+    description: Verify smoke pod logs contain all PASS markers
+    try:
+    - script:
+        content: |
+          set -e
+          logs=$(kubectl logs smoke-pod -n $NAMESPACE -c smoke-test)
+          echo "$logs"
+          echo "$logs" | grep -q "emptyDir: PASS"
+          echo "$logs" | grep -q "hostPath: PASS"
+          echo "$logs" | grep -q "configMap: PASS"
+          echo "$logs" | grep -q "secret: PASS"
+          echo "$logs" | grep -q "downwardAPI: PASS"
+          echo "$logs" | grep -q "projected: PASS"
+          echo "$logs" | grep -q "PVC: PASS"
+          echo "$logs" | grep -q "SA token automount: PASS"
+          echo "$logs" | grep -q "postStart hook: PASS"
+          echo "$logs" | grep -q "DNS from main: PASS"
+          echo "$logs" | grep -q "ALL SMOKE CHECKS PASSED"
+          echo "All log markers verified"
+    catch:
+    - podLogs:
+        name: smoke-pod
+        container: smoke-test
+        tail: 80
+
+  - name: verify-rbac
+    description: >
+      Pod using smoke-sa ServiceAccount verifies RBAC allows/denies
+      expected actions (DNS already verified in the smoke pod)
+    try:
+    - script:
+        content: |
+          for i in $(seq 1 30); do
+            if kubectl get service kubernetes -n default -o yaml; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "kubernetes service not found after 30s"
+          exit 1
+    - apply:
+        file: 02-rbac-pod.yaml
+    - assert:
+        file: 02-assert.yaml
+    catch:
+    - podLogs:
+        name: smoke-rbac
+        container: verifier
+        tail: 50
+    - describe:
+        apiVersion: v1
+        kind: Pod
+        name: smoke-rbac
+    - events: {}
