@@ -131,6 +131,13 @@ spec:
           test -f /var/run/secrets/kubernetes.io/serviceaccount/namespace
           echo "SA token automount: PASS"
 
+          echo "=== env vars: verify injected values ==="
+          test "$POD_NAME" = "smoke-pod"
+          test -n "$POD_NAMESPACE"
+          test "$CONFIG_GREETING" = "hello-from-smoke"
+          test "$SECRET_PASSWORD" = "s3cret-smoke"
+          echo "env vars: PASS"
+
           echo "=== lifecycle: verify postStart hook ran ==="
           for i in $(seq 1 10); do
             test -f /shared/poststart-marker && break
