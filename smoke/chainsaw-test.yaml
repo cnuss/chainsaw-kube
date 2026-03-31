@@ -82,6 +82,25 @@ spec:
         container: smoke-test
         tail: 80
 
+  - name: verify-probes
+    description: Verify exec, HTTP, and TCP probes all pass
+    try:
+    - apply:
+        file: 03-probes.yaml
+    - assert:
+        file: 03-assert.yaml
+    catch:
+    - podLogs:
+        name: probe-exec
+        tail: 10
+    - podLogs:
+        name: probe-http
+        tail: 10
+    - podLogs:
+        name: probe-tcp
+        tail: 10
+    - events: {}
+
   - name: verify-rbac
     description: >
       Pod using smoke-sa ServiceAccount verifies RBAC allows/denies
