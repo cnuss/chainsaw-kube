@@ -6,12 +6,14 @@ metadata:
 spec:
   description: Validates pod stdout logs are retrievable and contain expected output lines
   steps:
-  - name: create-pod-and-verify-logs
+  - name: create-pod
     try:
     - apply:
         file: 00-install.yaml
     - assert:
         file: 00-assert.yaml
+  - name: verify-logs
+    try:
     - script:
         content: |
           set -e
