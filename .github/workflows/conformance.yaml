@@ -43,7 +43,7 @@ jobs:
         uses: helm/kind-action@v1.12.0
 
       - if: matrix.provider == 'nanokube'
-        uses: cnuss/nanokube@dbd0fa349aebaa46e95128f80a9e26ac07f6380f # v1.36.0
+        uses: cnuss/nanokube@1.36
 
       - name: Run ${{ matrix.group }}${{ matrix.suite && '/' }}${{ matrix.suite }}
         run: make test GROUP=${{ matrix.group }} SUITE=${{ matrix.suite }} KIND=false
