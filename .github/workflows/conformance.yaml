@@ -33,23 +33,27 @@ jobs:
       fail-fast: false
       matrix:
         include: ${{ fromJson(needs.matrix.outputs.matrix) }}
-    name: ${{ matrix.group }}${{ matrix.suite && '/' }}${{ matrix.suite }}
+    name: ${{ matrix.provider }} ${{ matrix.group }}${{ matrix.suite && '/' }}${{ matrix.suite }}
     steps:
       - uses: actions/checkout@v5
 
       - uses: kyverno/action-install-chainsaw@v0.2.14
 
-      - uses: helm/kind-action@v1.12.0
+      - if: matrix.provider == 'kind'
+        uses: helm/kind-action@v1.12.0
+
+      - if: matrix.provider == 'nanokube'
+        uses: cnuss/nanokube@1.36
 
       - name: Run ${{ matrix.group }}${{ matrix.suite && '/' }}${{ matrix.suite }}
         run: make test GROUP=${{ matrix.group }} SUITE=${{ matrix.suite }} KIND=false
 
       - name: Export KIND logs
-        if: failure()
+        if: failure() && matrix.provider == 'kind'
         run: kind export logs kind-logs-ci --name chart-testing
 
       - name: Upload KIND logs
-        if: failure()
+        if: failure() && matrix.provider == 'kind'
         uses: actions/upload-artifact@v4
         with:
           name: kind-logs-${{ matrix.group }}-${{ matrix.suite || 'default' }}
