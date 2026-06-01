@@ -48,14 +48,18 @@ jobs:
       - name: Run ${{ matrix.group }}${{ matrix.suite && '/' }}${{ matrix.suite }}
         run: make test GROUP=${{ matrix.group }} SUITE=${{ matrix.suite }} KIND=false
 
-      - name: Export KIND logs
+      - name: Export kind logs
         if: failure() && matrix.provider == 'kind'
-        run: kind export logs kind-logs-ci --name chart-testing
+        run: kind export logs cluster-logs-ci --name chart-testing
 
-      - name: Upload KIND logs
-        if: failure() && matrix.provider == 'kind'
+      - name: Export nanokube logs
+        if: failure() && matrix.provider == 'nanokube'
+        run: nanokube export logs cluster-logs-ci
+
+      - name: Upload logs
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: kind-logs-${{ matrix.group }}-${{ matrix.suite || 'default' }}
-          path: kind-logs-ci/
+          name: logs-${{ matrix.provider }}-${{ matrix.group }}-${{ matrix.suite || 'default' }}
+          path: cluster-logs-ci/
           retention-days: 7
