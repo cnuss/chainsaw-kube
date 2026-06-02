@@ -39,8 +39,18 @@ jobs:
 
       - uses: kyverno/action-install-chainsaw@v0.2.14
 
-      - if: matrix.provider == 'kind'
-        uses: helm/kind-action@v1.12.0
+      - if: matrix.provider == 'minikube'
+        uses: medyagh/setup-minikube@latest
+        with:
+          kubernetes-version: v1.36.0
+
+      - if: matrix.provider == 'k3s'
+        run: |
+          curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.36.0+k3s1 sh -s - --write-kubeconfig-mode=644
+          mkdir -p "$HOME/.kube"
+          sudo cp /etc/rancher/k3s/k3s.yaml "$HOME/.kube/config"
+          sudo chown "$(id -u):$(id -g)" "$HOME/.kube/config"
+          kubectl wait --for=condition=Ready node --all --timeout=90s
 
       - if: matrix.provider == 'nanokube'
         uses: cnuss/nanokube@1.36
@@ -48,13 +58,21 @@ jobs:
       - name: Run ${{ matrix.group }}${{ matrix.suite && '/' }}${{ matrix.suite }}
         run: make test GROUP=${{ matrix.group }} SUITE=${{ matrix.suite }} KIND=false
 
-      - name: Export kind logs
-        if: failure() && matrix.provider == 'kind'
-        run: kind export logs cluster-logs-ci --name chart-testing
-
       - name: Export nanokube logs
         if: failure() && matrix.provider == 'nanokube'
         run: nanokube export logs cluster-logs-ci
+
+      - name: Export minikube logs
+        if: failure() && matrix.provider == 'minikube'
+        run: |
+          mkdir -p cluster-logs-ci
+          minikube logs --file=cluster-logs-ci/minikube.log
+
+      - name: Export k3s logs
+        if: failure() && matrix.provider == 'k3s'
+        run: |
+          mkdir -p cluster-logs-ci
+          sudo journalctl -u k3s --no-pager > cluster-logs-ci/k3s.log
 
       - name: Upload logs
         if: failure()

@@ -41,7 +41,7 @@ kind-cluster: install-kind
 ## matrix: emit JSON list of {group, suite, provider} objects for all test groups
 ##         groups with suites (e2e/<suite>/<test>/) emit one entry per suite
 ##         flat groups (smoke/) emit a single entry with empty suite
-##         each entry is fanned out across providers (nanokube, kind)
+##         each entry is fanned out across providers (nanokube, minikube, k3s)
 ##         writes to $GITHUB_OUTPUT when running in GitHub Actions
 matrix:
 	@entries=$$(for group in $$(ls -d */. 2>/dev/null | xargs -n1 dirname); do \
@@ -52,7 +52,7 @@ matrix:
 		elif ls $$group/chainsaw-test.yaml >/dev/null 2>&1; then \
 			printf '{"group":"%s","suite":""}\n' "$$group"; \
 		fi; \
-	done | jq -sc '["nanokube","kind"] as $$providers | [ .[] as $$e | $$providers[] as $$p | $$e + {provider:$$p} ]'); \
+	done | jq -sc '["nanokube","minikube","k3s"] as $$providers | [ .[] as $$e | $$providers[] as $$p | $$e + {provider:$$p} ]'); \
 	if [ "$$entries" = "[]" ] || [ -z "$$entries" ]; then echo "error: no tests found" >&2; exit 1; fi; \
 	echo "$$entries"; \
 	if [ -n "$$GITHUB_OUTPUT" ]; then echo "matrix=$$entries" >> "$$GITHUB_OUTPUT"; fi
