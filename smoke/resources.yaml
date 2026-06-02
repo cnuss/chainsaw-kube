@@ -126,30 +126,22 @@ spec:
           volumeMounts:
             - name: host-path
               mountPath: /mnt/host-path
-        - name: test-sa-token
+        - name: test-security-context
           image: busybox:latest
-          command:
-            [
-              "test",
-              "-s",
-              "/var/run/secrets/kubernetes.io/serviceaccount/token",
-            ]
-        - name: test-sa-ca-crt
-          image: busybox:latest
-          command:
-            [
-              "test",
-              "-f",
-              "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
-            ]
-        - name: test-sa-namespace
-          image: busybox:latest
-          command:
-            [
-              "test",
-              "-f",
-              "/var/run/secrets/kubernetes.io/serviceaccount/namespace",
-            ]
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 2000
+          command: ["sh", "-c"]
+          args:
+            - |
+              set -e
+              test "$(id -u)" = "1000"
+              test "$(id -g)" = "2000"
+              ! mkdir /mnt/root 2>/dev/null || { echo "unexpected write access to /mnt"; exit 1; }
+          volumeMounts:
+            - name: host-path
+              mountPath: /mnt/host-path
         - name: touch-mnt-pvc-init
           image: busybox:latest
           command: ["touch", "/mnt/pvc/init"]

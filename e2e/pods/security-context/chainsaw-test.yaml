@@ -14,15 +14,14 @@ spec:
           kind: ServiceAccount
           metadata:
             name: default
-  # TEMP: disabled
-  # - name: verify-runas-user
-  #   try:
-  #   - apply:
-  #       file: 00-install.yaml
-  #   - assert:
-  #       file: 00-assert.yaml
-  #   catch:
-  #   - events: {}
+  - name: verify-runas-user
+    try:
+    - apply:
+        file: 00-install.yaml
+    - assert:
+        file: 00-assert.yaml
+    catch:
+    - events: {}
   - name: verify-readonly-rootfs
     try:
     - apply:
