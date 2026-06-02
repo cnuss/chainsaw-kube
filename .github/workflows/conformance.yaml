@@ -44,9 +44,8 @@ jobs:
         uses: medyagh/setup-minikube@latest
         with:
           kubernetes-version: v1.36.0
+          container-runtime: containerd
         env:
-          # v1.36.0 is newer than minikube's bundled list, so it resolves the
-          # version via the GitHub API; authenticate to avoid the 60/hr limit.
           GITHUB_TOKEN: ${{ github.token }}
 
       - if: matrix.provider == 'k3s'
