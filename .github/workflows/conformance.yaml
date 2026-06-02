@@ -49,12 +49,9 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
 
       - if: matrix.provider == 'k3s'
-        run: |
-          curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.36.0+k3s1 sh -s - --write-kubeconfig-mode=644
-          mkdir -p "$HOME/.kube"
-          sudo cp /etc/rancher/k3s/k3s.yaml "$HOME/.kube/config"
-          sudo chown "$(id -u):$(id -g)" "$HOME/.kube/config"
-          kubectl wait --for=condition=Ready node --all --timeout=90s
+        uses: debianmaster/actions-k3s@master
+        with:
+          version: v1.36.0-k3s1
 
       - if: matrix.provider == 'nanokube'
         uses: cnuss/nanokube@1.36
@@ -76,7 +73,9 @@ jobs:
         if: failure() && matrix.provider == 'k3s'
         run: |
           mkdir -p cluster-logs-ci
-          sudo journalctl -u k3s --no-pager > cluster-logs-ci/k3s.log
+          for c in $(docker ps -a --filter "name=k3s" --format '{{.Names}}'); do
+            docker logs "$c" > "cluster-logs-ci/$c.log" 2>&1
+          done
 
       - name: Upload logs
         if: failure()
