@@ -20,6 +20,14 @@ spec:
           status:
             acceptedNames:
               kind: TestWidget
+            conditions:
+            - type: Established
+              status: "True"
+    # wait until the new API is actually discoverable before creating a CR;
+    # Established can still lag the apiserver serving it + discovery refresh
+    - script:
+        content: |
+          until kubectl get testwidgets.conformance.chainsaw.dev >/dev/null 2>&1; do sleep 1; done
     catch:
     - events: {}
   - name: create-custom-resource
